@@ -12,16 +12,31 @@ namespace OoLunar.StaminaUI.Patches
     {
         private static bool _instantiating = true;
         private static TextMeshProUGUI? _hudPercentagesText;
+        private static string? _lastAppliedHexColor;
 
         private static Color ParseHexColor(string hex)
         {
-            // Remove # if present
-            string cleanHex = hex.TrimStart('#');
+            // Null/empty check
+            if (string.IsNullOrWhiteSpace(hex))
+            {
+                StaminaUIPlugin.StaticLogger?.LogWarning("Hex color is null or empty. Using default red color.");
+                return new Color(1f, 0f, 0f, 1f);
+            }
+
+            // Remove # and whitespace
+            string cleanHex = hex.Trim().TrimStart('#');
 
             // Validate hex string length
             if (cleanHex.Length != 6 && cleanHex.Length != 8)
             {
                 StaminaUIPlugin.StaticLogger?.LogWarning($"Invalid hex color format: {hex}. Expected 6 or 8 characters. Using default red color.");
+                return new Color(1f, 0f, 0f, 1f);
+            }
+
+            // Validate hex characters
+            if (!System.Text.RegularExpressions.Regex.IsMatch(cleanHex, "^[0-9A-Fa-f]+$"))
+            {
+                StaminaUIPlugin.StaticLogger?.LogWarning($"Invalid hex color characters: {hex}. Using default red color.");
                 return new Color(1f, 0f, 0f, 1f);
             }
 
@@ -40,6 +55,25 @@ namespace OoLunar.StaminaUI.Patches
             {
                 StaminaUIPlugin.StaticLogger?.LogWarning($"Failed to parse hex color '{hex}': {ex.Message}. Using default red color.");
                 return new Color(1f, 0f, 0f, 1f);
+            }
+        }
+
+        private static void ApplyConfiguredColor(TextMeshProUGUI text, string hexColor)
+        {
+            Color parsedColor = ParseHexColor(hexColor);
+
+            // Ensure our cloned text doesn't inherit prefab tint/gradient behavior.
+            text.enableVertexGradient = false;
+            text.colorGradient = new VertexGradient(parsedColor, parsedColor, parsedColor, parsedColor);
+
+            // Apply both so TMP shaders/materials don't keep the prefab's orange face tint.
+            text.color = parsedColor;
+            text.faceColor = parsedColor;
+
+            // Make sure we're not mutating a shared material used by other UI.
+            if (text.fontSharedMaterial != null)
+            {
+                text.fontSharedMaterial = Instantiate(text.fontSharedMaterial);
             }
         }
 
@@ -64,7 +98,8 @@ namespace OoLunar.StaminaUI.Patches
             // Stylize the text.
             _hudPercentagesText = _hudPercentages.GetComponent<TextMeshProUGUI>();
             string hexColor = StaminaUIPlugin.TextColorHex?.Value ?? "FF0000";
-            _hudPercentagesText.faceColor = ParseHexColor(hexColor);
+            ApplyConfiguredColor(_hudPercentagesText, hexColor);
+            _lastAppliedHexColor = hexColor;
             _hudPercentagesText.fontSize = 12f;
             _hudPercentagesText.margin = new Vector4(0f, -36f, 100f, 0f);
             _hudPercentagesText.alignment = (TextAlignmentOptions)260;
@@ -86,9 +121,17 @@ namespace OoLunar.StaminaUI.Patches
                 return;
             }
 
+            // Live-update configured color (so LethalConfig edits apply immediately)
+            string hexColor = StaminaUIPlugin.TextColorHex?.Value ?? "FF0000";
+            if (!string.Equals(_lastAppliedHexColor, hexColor, StringComparison.OrdinalIgnoreCase))
+            {
+                ApplyConfiguredColor(_hudPercentagesText, hexColor);
+                _lastAppliedHexColor = hexColor;
+            }
+
             float health = Mathf.RoundToInt(playerController.health);
             int sprint = Math.Max(Mathf.RoundToInt(((playerController.sprintMeter * 100f) - 10f) / 90f * 100f), 0);
-            _hudPercentagesText.text = $"{health}\n\n\n\n{sprint}%";
+            _hudPercentagesText.text = $"\n\n\n\n{sprint}%";
         }
     }
 }
