@@ -1,6 +1,6 @@
 using System;
 
-namespace OoLunar.LethalCompanyPatched.Patches
+namespace OoLunar.StaminaUI.Patches
 {
     [AttributeUsage(AttributeTargets.Class)]
     public sealed class LethalPatchAttribute : Attribute;

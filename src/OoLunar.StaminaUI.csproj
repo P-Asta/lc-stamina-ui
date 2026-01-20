@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
-    <AssemblyName>LethalCompanyPatched</AssemblyName>
+    <AssemblyName>StaminaUI</AssemblyName>
     <Description>A continuation of An0n_Patches.</Description>
     <Version>1.2.1</Version>
     <LangVersion>Preview</LangVersion>
@@ -17,6 +17,7 @@
     <PackageReference Include="BepInEx.Core" Version="5.*" />
     <PackageReference Include="BepInEx.PluginInfoProps" Version="2.1.0" />
     <PackageReference Include="UnityEngine.Modules" Version="6000.0.5" IncludeAssets="compile" />
+    <Reference Include="LethalConfig" HintPath="$(MSBuildThisFileDirectory)..\lib\LethalConfig.dll" />
     <Reference Include="Assembly-CSharp" HintPath="c:/Program Files (x86)/Steam/steamapps/common/Lethal Company/Lethal Company_Data/Managed/Assembly-CSharp.dll" Publicize="true" />
     <Reference Include="Unity.InputSystem" HintPath="c:/Program Files (x86)/Steam/steamapps/common/Lethal Company/Lethal Company_Data/Managed/Unity.InputSystem.dll" Publicize="true" />
     <Reference Include="Unity.Netcode.Runtime" HintPath="c:/Program Files (x86)/Steam/steamapps/common/Lethal Company/Lethal Company_Data/Managed/Unity.Netcode.Runtime.dll" Publicize="true" />
